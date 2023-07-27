@@ -54,10 +54,22 @@ def main():
             new_results = [item for item in search_results.items if item['value'] in val]
             new_results_id = [item['id'] for item in new_results]
 
-            
+        #------------------Range and COuntry
+        if topic != "":
+            country_form = st.form("country form")
+            country = country_form.text_input("Select countries: ")
+            time_start, time_end = country_form.slider(
+                'Select time range for your data: ', 
+                1960, 2022, (1990, 2010)
+            )
+            if country != "":
+                st.write('Your selected country: ' , country)
+            if (time_start != "") and (time_end != ""):
+                st.write('Data from ', time_start, 'to', time_end)
 
+            country_form.form_submit_button("Show my data!")
 
-
+        
 
     st.header('Info about your data')
     #Display the results
@@ -71,6 +83,7 @@ def main():
             id_info = metadata_info(id)
             with st.expander("more info about data"):
                 id_info
+
 
 if __name__ == "__main__":
     main()

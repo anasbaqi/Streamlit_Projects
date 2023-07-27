@@ -28,6 +28,10 @@ def metadata_info(id):
     return wb.series.metadata.get(id)
 
 
+@st.cache_data
+def final_data(id, country, time_start, time_end):
+    return wb.data.DataFrame(id, country, time=range(time_start, time_end, 1), labels=True)
+
 def main():
     #Setting up the page: 
     st.set_page_config(page_title="World Bank Indicator Simple Search")
@@ -54,21 +58,20 @@ def main():
             new_results = [item for item in search_results.items if item['value'] in val]
             new_results_id = [item['id'] for item in new_results]
 
-        #------------------Range and COuntry
+        #------------------Range and Country-----------------------------------------------------------
         if topic != "":
             country_form = st.form("country form")
             country = country_form.text_input("Select countries: ")
-            time_start, time_end = country_form.slider(
-                'Select time range for your data: ', 
-                1960, 2022, (1990, 2010)
-            )
+            time_start = country_form.number_input("Start Year:" )
+            time_end = country_form.number_input("End Year:" )
             if country != "":
                 st.write('Your selected country: ' , country)
-            if (time_start != "") and (time_end != ""):
                 st.write('Data from ', time_start, 'to', time_end)
 
             country_form.form_submit_button("Show my data!")
+        #-------------------------------------------------------------------------------------------------
 
+        
         
 
     st.header('Info about your data')
@@ -84,6 +87,13 @@ def main():
             with st.expander("more info about data"):
                 id_info
 
+        if country is not None and time_start is not None:
+            if country != "":
+                for id in new_results_id:
+                    #st.write(id, country, time_start, time_end)
+                    time_start = int(time_start)
+                    time_end = int(time_end)
+                    st.dataframe(final_data(id, country, time_start, time_end))
 
 if __name__ == "__main__":
     main()

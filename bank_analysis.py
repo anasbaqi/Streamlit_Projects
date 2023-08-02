@@ -38,6 +38,11 @@ def search_web(topic):
 def metadata_info(id):
     return wb.series.metadata.get(id)
 
+def more_info(meta_info):
+    st.write("This data is about:")
+    st.write(meta_info.metadata['Longdefinition'], "\n")
+    st.write('Source:')
+    st.write(meta_info.metadata['Source'])
 
 @st.cache_data
 def final_data(id, country, time_start, time_end):
@@ -49,11 +54,17 @@ def country_to_code(list_country):
     return country_codes_list
 
 
+@st.cache_data
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode('utf-8')
+
+
+
 def main():
     
     #Setting up the page: 
     st.set_page_config(page_title="World Bank Indicator Simple Search")
-    # st.header(" World Bank Indicator Simple Search ")
 
 #---------------------------------------------------------------------------------------------------------------------------------
     with st.sidebar:
@@ -74,7 +85,7 @@ def main():
         #User selects data from the results
         text_form = st.form("form")
         if topic != "": 
-            val = text_form.selectbox("select your Indicator from the results:", search_results_value)
+            val = text_form.selectbox("select your indicator from the results:", search_results_value)
             selected_data = text_form.form_submit_button("Finished selecting data")
 
         
@@ -83,16 +94,20 @@ def main():
             if 'more_info' not in st.session_state:
                 st.session_state.more_info = True
 
-            if 'more_info' in st.session_state:
-                st.write("more information about your indicators:")
+            if selected_data:
+                st.session_state.more_info = True
 
-                #Option for more info about the data
-                counter = 0
-                for id in new_results_id:
-                    id_info = metadata_info(id)
-                    with st.expander(val):
-                        id_info
-                    counter += 1
+            # if 'more_info' in st.session_state:
+            #     if st.session_state.more_info == True:
+            #         st.write("more information about your indicators:")
+
+            #         #Option for more info about the data
+            #         counter = 0
+            #         for id in new_results_id:
+            #             id_info = metadata_info(id)
+            #             with st.expander(val):
+            #                 id_info
+            #             counter += 1
             #------------------Range and Country-----------------------------------------------------------
         if topic != "":
             #multiple countries ?
@@ -140,10 +155,22 @@ def main():
                             st.write("Data for member countries:")
                             raw_data_m = final_data(id, country_oic, time_start, time_end)
                             your_data_mem = st.dataframe(raw_data_m)
+                            st.download_button(
+                                label="Download as CSV",
+                                data=convert_df(raw_data_m),
+                                file_name="member_data.csv",
+                                mime='text/csv'
+                            )
                         if country_all != []:
                             st.write("Data for non-member countries:")
                             raw_data_nonm = final_data(id, country_all, time_start, time_end)
                             your_data_nonm = st.dataframe(raw_data_nonm)
+                            st.download_button(
+                                label="Download as CSV",
+                                data=convert_df(raw_data_nonm),
+                                file_name="nonmember_data.csv",
+                                mime='text/csv'
+                            )
                         counter += 1
 
         st.subheader('Visualize the data')
